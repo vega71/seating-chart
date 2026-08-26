@@ -1,0 +1,952 @@
+/* -------------------------------------------------------------
+   스마트 자리배치 시스템 - 스타일시트
+   디자인 컨셉: Modern Glassmorphism & Cyberpunk-soft Dark Mode
+------------------------------------------------------------- */
+
+:root {
+    /* 색상 테마 (Harmonious Palette) */
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+    --panel-bg: rgba(30, 41, 59, 0.7);
+    --card-bg: rgba(255, 255, 255, 0.06);
+    --card-hover-bg: rgba(255, 255, 255, 0.12);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-hover-color: rgba(255, 255, 255, 0.25);
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    
+    --primary-color: #6366f1; /* Indigo */
+    --primary-hover: #4f46e5;
+    --secondary-color: #3b82f6; /* Blue */
+    --accent-color: #ec4899; /* Pink */
+    --accent-hover: #db2777;
+    --success-color: #10b981; /* Green */
+    --warning-color: #f59e0b; /* Amber/Gold */
+    --danger-color: #ef4444; /* Red */
+    
+    /* 폰트 및 레이아웃 설정 */
+    --font-main: 'Outfit', 'Noto Sans KR', -apple-system, sans-serif;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* 자리배치 그리드 설정 */
+    --aisle-width: 48px; /* 2열과 3열 사이 통로 너비 */
+}
+
+/* 라이트 모드 (기본은 다크, 추후 확장을 고려해 변수만 분리) */
+body.light-mode {
+    --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    --panel-bg: rgba(255, 255, 255, 0.8);
+    --card-bg: rgba(0, 0, 0, 0.03);
+    --card-hover-bg: rgba(0, 0, 0, 0.06);
+    --border-color: rgba(0, 0, 0, 0.08);
+    --border-hover-color: rgba(0, 0, 0, 0.15);
+    
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    
+    --primary-color: #4f46e5;
+    --secondary-color: #2563eb;
+    --card-seat-bg: #ffffff;
+}
+
+/* 기본 스타일 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-main);
+    background: var(--bg-gradient);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    overflow-x: hidden;
+}
+
+/* 스크롤바 커스텀 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* 글래스모피즘 효과 공통 */
+.glass {
+    background: var(--panel-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* 앱 전체 컨테이너 */
+.app-container {
+    width: 100%;
+    max-width: 1400px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* 헤더 */
+.app-header {
+    text-align: center;
+    padding: 0.5rem 0;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.logo-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    color: var(--primary-color);
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+}
+
+.app-header h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    background: linear-gradient(to right, #818cf8, #e879f9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.header-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    font-weight: 300;
+}
+
+/* 메인 레이아웃 */
+.app-main {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .app-main {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 컨트롤 패널 (좌측) */
+.control-panel {
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.panel-section h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+.panel-section h2 i {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--primary-color);
+}
+
+.section-desc {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+/* 텍스트 입력창 */
+textarea {
+    width: 100%;
+    height: 160px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.95rem;
+    resize: none;
+    outline: none;
+    transition: var(--transition-smooth);
+    line-height: 1.5;
+}
+
+textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+/* 통계 컨테이너 */
+.stats-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.stat-card {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* 버튼 스타일 */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    outline: none;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--border-hover-color);
+    transform: translateY(-2px);
+}
+
+.btn-accent {
+    background: var(--accent-color);
+    color: white;
+}
+
+.btn-accent:hover:not(:disabled) {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-outline:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--danger-color);
+    color: #fca5a5;
+    transform: translateY(-2px);
+}
+
+.btn-large {
+    padding: 0.9rem 1.5rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.button-group-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.button-group-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.full-width {
+    width: 100%;
+}
+
+/* 저장 상태 표시 영역 */
+.save-status-info {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.75rem;
+    padding: 0.45rem 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.save-status-info i {
+    width: 0.9rem;
+    height: 0.9rem;
+    color: var(--primary-color);
+}
+
+/* 토스트 알림 메시지 */
+.toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast {
+    background: rgba(30, 41, 59, 0.95);
+    border: 1px solid var(--primary-color);
+    color: var(--text-primary);
+    padding: 0.85rem 1.25rem;
+    border-radius: var(--radius-md);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    pointer-events: auto;
+    animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast i {
+    width: 1.2rem;
+    height: 1.2rem;
+    flex-shrink: 0;
+}
+
+.toast.toast-success {
+    border-color: var(--success-color);
+}
+.toast.toast-success i {
+    color: var(--success-color);
+}
+
+.toast.toast-info {
+    border-color: var(--secondary-color);
+}
+.toast.toast-info i {
+    color: var(--secondary-color);
+}
+
+.toast.toast-warning {
+    border-color: var(--warning-color);
+}
+.toast.toast-warning i {
+    color: var(--warning-color);
+}
+
+.toast.toast-error {
+    border-color: var(--danger-color);
+}
+.toast.toast-error i {
+    color: var(--danger-color);
+}
+
+@keyframes toastIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toastOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+}
+
+/* 배치판 영역 (우측) */
+.board-container {
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    align-items: center;
+}
+
+/* 칠판/교탁 */
+.classroom-front {
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 0.5rem;
+}
+
+.blackboard {
+    background: linear-gradient(180deg, #1e3a1e 0%, #142814 100%);
+    border: 8px solid #3f2a14;
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    text-align: center;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.blackboard::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 10%;
+    width: 80%;
+    height: 4px;
+    background: #5c3e1e;
+    border-radius: 2px;
+}
+
+.board-text {
+    color: #e2e8f0;
+    font-family: inherit;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* 자리배치 그리드 */
+.seating-grid-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0.5rem;
+}
+
+.seating-grid {
+    display: grid;
+    /* 5행, 열은 [1열, 2열, 통로(3열), 3열, 4열] -> 총 5개의 컬럼 */
+    grid-template-columns: 1fr 1fr var(--aisle-width) 1fr 1fr;
+    grid-auto-rows: 95px;
+    gap: 1rem 0.75rem;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 자리 칸 (Slot) */
+.seat-slot {
+    background: rgba(0, 0, 0, 0.15);
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-md);
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: var(--transition-smooth);
+}
+
+.seat-slot.drag-over {
+    border-color: var(--primary-color);
+    background: rgba(99, 102, 241, 0.1);
+    transform: scale(1.02);
+}
+
+/* 자리 번호 (배경) */
+.seat-number {
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+/* 통로 공간 (Aisle Column) */
+.aisle-space {
+    grid-column: 3;
+    /* 5개 행에 걸쳐서 배치 */
+    grid-row: span 5;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.aisle-line {
+    width: 4px;
+    height: 80%;
+    background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    border-radius: 2px;
+}
+
+/* 학생 카드 */
+.student-card {
+    width: calc(100% - 6px);
+    height: calc(100% - 6px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+    user-select: none;
+    transition: var(--transition-smooth);
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.student-card:active {
+    cursor: grabbing;
+}
+
+.student-card:hover {
+    background: var(--card-hover-bg);
+    border-color: var(--border-hover-color);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+/* 드래그 상태 스타일 */
+.student-card.dragging {
+    opacity: 0.4;
+    border: 2px dashed var(--primary-color);
+}
+
+.student-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+}
+
+/* 카드 내 고정(Lock) 제어 아이콘 */
+.lock-toggle {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 2px;
+    border-radius: 4px;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lock-toggle:hover {
+    color: var(--warning-color);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.lock-toggle i {
+    width: 0.85rem;
+    height: 0.85rem;
+}
+
+/* 자리가 고정된 카드의 스타일 */
+.student-card.locked {
+    border: 1.5px solid rgba(245, 158, 11, 0.4);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+}
+
+.student-card.locked .lock-toggle {
+    color: var(--warning-color);
+}
+
+.student-card.locked .lock-toggle:hover {
+    color: #fbbf24;
+}
+
+/* 대기 학생 영역 */
+.waiting-area-section {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    margin-top: 1rem;
+}
+
+.waiting-area-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.waiting-area-section h3 i {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--primary-color);
+}
+
+.waiting-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-height: 50px;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.empty-waiting-msg {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    width: 100%;
+    text-align: center;
+    padding: 0.5rem 0;
+}
+
+/* 대기 상태의 학생 태그 */
+.waiting-student {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 20px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: grab;
+    user-select: none;
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.waiting-student:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--border-hover-color);
+    transform: scale(1.05);
+}
+
+.waiting-student.dragging {
+    opacity: 0.4;
+}
+
+/* -------------------------------------------------------------
+   인쇄 전용 스타일 (Print Media Query)
+------------------------------------------------------------- */
+@media print {
+    body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+        height: auto !important;
+    }
+    
+    .app-container {
+        display: block !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    .app-header h1 {
+        background: none !important;
+        -webkit-text-fill-color: initial !important;
+        color: #000000 !important;
+        font-size: 2rem !important;
+        text-align: center !important;
+    }
+
+    .app-header p {
+        color: #555555 !important;
+        text-align: center !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .control-panel, 
+    .waiting-area-section,
+    .print-hide,
+    .lock-toggle {
+        display: none !important; /* 컨트롤러, 대기실, 고정 버튼 인쇄 시 숨김 */
+    }
+
+    .board-container {
+        background: none !important;
+        backdrop-filter: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+    }
+
+    .classroom-front {
+        margin-bottom: 2rem !important;
+    }
+
+    .blackboard {
+        background: #f1f5f9 !important;
+        border: 2px solid #000000 !important;
+        box-shadow: none !important;
+        padding: 0.5rem !important;
+    }
+
+    .board-text {
+        color: #000000 !important;
+        font-size: 1rem !important;
+        text-shadow: none !important;
+    }
+
+    .seating-grid {
+        max-width: 100% !important;
+        grid-auto-rows: 100px !important;
+        gap: 1.5rem 1rem !important;
+    }
+
+    .seat-slot {
+        background: #ffffff !important;
+        border: 1px solid #cccccc !important;
+    }
+
+    .seat-number {
+        color: #555555 !important;
+    }
+
+    .student-card {
+        background: #ffffff !important;
+        border: 1.5px solid #000000 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    .student-card.locked {
+        border: 2px double #000000 !important;
+    }
+
+    .student-name {
+        color: #000000 !important;
+        font-size: 1.2rem !important;
+        font-weight: 700 !important;
+    }
+
+    .aisle-line {
+        background: #dddddd !important;
+    }
+}
+
+/* -------------------------------------------------------------
+   프리젠테이션 모드 (크게 보기) 스타일
+------------------------------------------------------------- */
+
+/* 복귀 플로팅 버튼 */
+.btn-exit-presentation {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    background: rgba(30, 41, 59, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    padding: 0.75rem 1.25rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition-smooth);
+}
+
+.btn-exit-presentation:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(239, 68, 68, 0.2);
+}
+
+.btn-exit-presentation i {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+/* presentation-mode 활성화 시 */
+body.presentation-mode {
+    padding: 1.5rem;
+    overflow: hidden; /* 큰 화면 시 스크롤바 방지 */
+}
+
+body.presentation-mode .btn-exit-presentation {
+    display: inline-flex;
+}
+
+body.presentation-mode .control-panel,
+body.presentation-mode .app-header,
+body.presentation-mode .waiting-area-section,
+body.presentation-mode .lock-toggle {
+    display: none !important; /* 발표 시 불필요한 컨트롤 및 잠금 버튼 완전 배제 */
+}
+
+body.presentation-mode .app-container {
+    max-width: 1600px;
+    height: 94vh;
+    justify-content: center;
+}
+
+body.presentation-mode .app-main {
+    grid-template-columns: 1fr;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+body.presentation-mode .board-container {
+    width: 100%;
+    max-width: 100%;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    justify-content: center;
+    gap: 2.5rem;
+}
+
+body.presentation-mode .classroom-front {
+    max-width: 800px;
+    margin-bottom: 0;
+}
+
+body.presentation-mode .blackboard {
+    padding: 1.25rem;
+    border-width: 10px;
+}
+
+body.presentation-mode .board-text {
+    font-size: 1.6rem;
+    letter-spacing: 0.25em;
+}
+
+body.presentation-mode .seating-grid-wrapper {
+    width: 100%;
+    padding: 0;
+}
+
+body.presentation-mode .seating-grid {
+    max-width: 1200px;
+    grid-auto-rows: 12vh; /* 반응형 화면 높이 비율로 확대 */
+    gap: 2.5vh 2vw; /* 자리 간 여유 공간 확장 */
+}
+
+body.presentation-mode .seat-slot {
+    border-style: solid;
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.25);
+}
+
+body.presentation-mode .seat-number {
+    font-size: 1rem;
+    top: 10px;
+    left: 12px;
+}
+
+body.presentation-mode .student-card {
+    width: 100%;
+    height: 100%;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+body.presentation-mode .student-name {
+    font-size: 2.4rem; /* 뒤에서도 이름이 잘 보이도록 초대형 확대 */
+    font-weight: 700;
+    margin-top: 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+}
+
+body.presentation-mode .student-card.locked {
+    border-color: rgba(245, 158, 11, 0.6);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(255, 255, 255, 0.05) 100%);
+}
+

@@ -1,0 +1,926 @@
+/* ----------------------------------------------------
+   디자인 시스템 및 CSS 변수
+---------------------------------------------------- */
+:root {
+  /* 라이트 모드 (기본값) */
+  --bg-app: #f1f5f9;
+  --bg-sidebar: rgba(255, 255, 255, 0.7);
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-seat-empty: rgba(255, 255, 255, 0.4);
+  --bg-seat-occupied: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  --bg-seat-hover: rgba(59, 130, 246, 0.1);
+  --border-color: rgba(226, 232, 240, 0.8);
+  --border-seat-empty: 2px dashed #cbd5e1;
+  --border-seat-hover: 2px dashed #3b82f6;
+  
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #ffffff;
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  
+  --glass-border: rgba(255, 255, 255, 0.18);
+  
+  --accent-color: #3b82f6;
+  --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  --success-color: #10b981;
+  --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --danger-color: #ef4444;
+  --info-color: #06b6d4;
+  
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+  /* 다크 모드 */
+  --bg-app: #0b0f19;
+  --bg-sidebar: rgba(17, 24, 39, 0.7);
+  --bg-card: rgba(17, 24, 39, 0.85);
+  --bg-seat-empty: rgba(31, 41, 55, 0.4);
+  --bg-seat-occupied: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  --bg-seat-hover: rgba(37, 99, 235, 0.2);
+  --border-color: rgba(75, 85, 99, 0.4);
+  --border-seat-empty: 2px dashed #4b5563;
+  --border-seat-hover: 2px dashed #3b82f6;
+  
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --text-light: #ffffff;
+  
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+/* ----------------------------------------------------
+   글로벌 초기화 및 기본 스타일
+---------------------------------------------------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+  overflow-x: hidden;
+}
+
+/* ----------------------------------------------------
+   앱 레이아웃 & 컨테이너
+---------------------------------------------------- */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 24px;
+  gap: 20px;
+  max-width: 1600px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* 헤더 */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-radius: 16px;
+  background: var(--bg-sidebar);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-glass);
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-badge {
+  background: var(--accent-gradient);
+  color: var(--text-light);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 1px;
+}
+
+.logo-area h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.icon-btn:hover {
+  background-color: var(--border-color);
+  transform: translateY(-2px);
+}
+
+/* 테마 스위처 아이콘 제어 */
+.theme-icon {
+  width: 20px;
+  height: 20px;
+}
+[data-theme="dark"] .sun-icon { display: block; }
+[data-theme="dark"] .moon-icon { display: none; }
+body:not([data-theme="dark"]) .sun-icon { display: none; }
+body:not([data-theme="dark"]) .moon-icon { display: block; }
+
+/* 메인 그리드 분할 */
+.app-main {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+  align-items: stretch;
+}
+
+/* ----------------------------------------------------
+   공통 글래스 카드 (UI 컴포넌트)
+---------------------------------------------------- */
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title svg {
+  color: var(--accent-color);
+  width: 22px;
+  height: 22px;
+}
+
+.card-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: -8px;
+}
+
+/* ----------------------------------------------------
+   사이드바 (컨트롤 패널)
+---------------------------------------------------- */
+.control-sidebar {
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+/* 드롭존 */
+.dropzone {
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.dropzone:hover, .dropzone.dragover {
+  border-color: var(--accent-color);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.upload-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  transition: color var(--transition-fast), transform var(--transition-normal);
+}
+
+.dropzone:hover .upload-icon {
+  color: var(--accent-color);
+  transform: translateY(-4px);
+}
+
+.dropzone-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.file-spec {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* 로드된 파일 정보 */
+.loaded-file-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 12px 16px;
+  border-radius: 10px;
+}
+
+.file-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 80%;
+}
+
+.success-icon {
+  color: var(--success-color);
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.file-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-danger-btn {
+  background: transparent;
+  border: none;
+  color: var(--danger-color);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.text-danger-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* 버튼 스타일 */
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition-fast);
+  color: var(--text-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-primary {
+  background: var(--accent-gradient);
+  grid-column: span 2;
+  padding: 14px;
+  font-size: 1.05rem;
+}
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: #64748b;
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: #475569;
+}
+
+.btn-success {
+  background: var(--success-gradient);
+}
+.btn-success:hover:not(:disabled) {
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-info {
+  background-color: var(--info-color);
+  grid-column: span 2;
+}
+.btn-info:hover:not(:disabled) {
+  background-color: #0891b2;
+}
+
+/* 대기 학생 목록 */
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge {
+  background-color: var(--border-color);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.waiting-students-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.empty-list-msg {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-align: center;
+  width: 100%;
+  padding: 32px 0;
+}
+
+/* 대기 학생 카드 */
+.student-badge-item {
+  background-color: var(--border-color);
+  color: var(--text-main);
+  border: 1px solid var(--glass-border);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: grab;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.student-badge-item:hover {
+  background-color: var(--accent-color);
+  color: var(--text-light);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.student-badge-item:active {
+  cursor: grabbing;
+}
+
+.student-badge-item.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+}
+
+.student-badge-item .num-tag {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* ----------------------------------------------------
+   우측 자리배치도 레이아웃 영역
+---------------------------------------------------- */
+.seating-layout-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-sidebar);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 16px 24px 20px 24px;
+  box-shadow: var(--shadow-glass);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 600px;
+}
+
+/* 교탁 / 칠판 */
+.classroom-front {
+  width: 60%;
+  max-width: 400px;
+  margin-bottom: 8px;
+}
+
+.chalkboard {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: var(--text-light);
+  border: 3px solid #64748b;
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 4px;
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+
+.chalkboard::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 20%;
+  width: 60%;
+  height: 3px;
+  background-color: #cbd5e1;
+  border-radius: 2px;
+}
+
+/* 자리배치 그리드 컨테이너 */
+.seating-grid-container {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+/* 복도 4열 5행 구조 그리드 */
+.seating-grid {
+  display: grid;
+  /* 1열, 2열, 통로(50px), 3열, 4열 */
+  grid-template-columns: repeat(2, 1fr) 50px repeat(2, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 10px 16px;
+  width: 100%;
+  max-width: 900px;
+  height: 100%;
+  max-height: 420px;
+}
+
+/* 복도(통로) 셀 설정 */
+.seating-aisle {
+  grid-column: 3;
+  grid-row: span 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.aisle-line {
+  width: 2px;
+  height: 90%;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 8px,
+    var(--border-color) 8px,
+    var(--border-color) 16px
+  );
+  opacity: 0.8;
+}
+
+/* 개별 좌석 카드 (빈자리) */
+.seat-card {
+  border: var(--border-seat-empty);
+  background-color: var(--bg-seat-empty);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  padding: 6px;
+}
+
+.seat-card:hover {
+  border-color: var(--accent-color);
+  background-color: var(--bg-seat-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.seat-card.dragover {
+  border-color: var(--success-color);
+  background-color: rgba(16, 185, 129, 0.1);
+  transform: scale(1.02);
+}
+
+/* 좌석에 부여되는 꼬리표 (자리 번호 등) */
+.seat-card .seat-index {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+/* 빈 좌석 내부 요소 */
+.seat-empty-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.seat-empty-inner svg {
+  width: 24px;
+  height: 24px;
+  opacity: 0.6;
+}
+
+.seat-empty-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+/* ----------------------------------------------------
+   배치 완료된 학생 좌석 카드
+---------------------------------------------------- */
+.seat-card.occupied {
+  border: 1px solid var(--glass-border);
+  background: var(--bg-seat-occupied);
+  color: var(--text-light);
+  cursor: grab;
+  box-shadow: var(--shadow-md);
+}
+
+.seat-card.occupied:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg), 0 0 16px rgba(59, 130, 246, 0.3);
+}
+
+.seat-card.occupied:active {
+  cursor: grabbing;
+}
+
+.seat-card.occupied.dragging {
+  opacity: 0.3;
+}
+
+.seat-card.occupied .seat-index {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.seat-student-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.seat-student-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background-color: rgba(255, 255, 255, 0.22);
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.seat-student-name {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+/* 셔플 애니메이션 */
+@keyframes seatPopIn {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.seat-card.animate-pop {
+  animation: seatPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 하단 상태 바 */
+.seating-status-bar {
+  display: flex;
+  gap: 24px;
+  padding: 4px 16px;
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--glass-border);
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.status-item strong {
+  color: var(--text-main);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.status-dot.total { background-color: var(--text-muted); }
+.status-dot.occupied { background-color: var(--accent-color); }
+.status-dot.empty { background-color: #cbd5e1; }
+[data-theme="dark"] .status-dot.empty { background-color: #4b5563; }
+
+/* ----------------------------------------------------
+   크게 보기 (Fullscreen) 스타일
+---------------------------------------------------- */
+.app-container.fullscreen-mode {
+  padding: 0;
+  max-width: 100vw;
+  width: 100vw;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--bg-app);
+}
+
+.app-container.fullscreen-mode .app-header,
+.app-container.fullscreen-mode .control-sidebar,
+.app-container.fullscreen-mode .seating-status-bar {
+  display: none !important;
+}
+
+.app-container.fullscreen-mode .app-main {
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+}
+
+.app-container.fullscreen-mode .seating-layout-area {
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0 0 60px 0;
+  width: 100%;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.app-container.fullscreen-mode .classroom-front {
+  max-width: 600px;
+  width: 70%;
+  margin-bottom: 0px;
+}
+
+.app-container.fullscreen-mode .chalkboard {
+  font-size: 1.4rem;
+  padding: 12px;
+}
+
+.app-container.fullscreen-mode .seating-grid {
+  max-width: 1200px;
+  max-height: 78vh;
+  gap: 12px 24px;
+  height: 100%;
+}
+
+.app-container.fullscreen-mode .seating-aisle {
+  grid-template-columns: repeat(2, 1fr) 80px repeat(2, 1fr);
+}
+
+.app-container.fullscreen-mode .seat-card {
+  padding: 8px 12px;
+  border-radius: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-container.fullscreen-mode .seat-card .seat-index {
+  font-size: 1rem;
+  top: 12px;
+  left: 16px;
+}
+
+.app-container.fullscreen-mode .seat-student-num {
+  font-size: 1.2rem;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 4px;
+}
+
+.app-container.fullscreen-mode .seat-student-name {
+  font-size: 2.2rem;
+}
+
+.app-container.fullscreen-mode .seat-empty-text {
+  font-size: 1.4rem;
+}
+
+.app-container.fullscreen-mode .seat-empty-inner svg {
+  width: 32px;
+  height: 32px;
+}
+
+/* 크게 보기 닫기 힌트 */
+.fullscreen-close-hint {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 0.9rem;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-lg);
+  z-index: 9999;
+}
+
+.app-container.fullscreen-mode .fullscreen-close-hint {
+  display: flex;
+}
+
+/* ----------------------------------------------------
+   PDF 출력 및 인쇄 최적화 스타일 (@media print)
+---------------------------------------------------- */
+@media print {
+  @page {
+    size: A4 landscape; /* 가로 출력이 통로가 있는 4열 구조에 더 적합함 */
+    margin: 10mm;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .app-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  .app-header,
+  .control-sidebar,
+  .seating-status-bar,
+  .fullscreen-close-hint {
+    display: none !important; /* 인쇄 시 제어 요소는 완전히 숨김 */
+  }
+
+  .app-main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .seating-layout-area {
+    border: none !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    justify-content: space-around !important;
+  }
+
+  .classroom-front {
+    max-width: 400px !important;
+    width: 60% !important;
+    margin-bottom: 20px !important;
+  }
+
+  .chalkboard {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 2px solid #000000 !important;
+    box-shadow: none !important;
+  }
+
+  .chalkboard::after {
+    background-color: #000000 !important;
+  }
+
+  .seating-grid {
+    max-width: 100% !important;
+    max-height: 480px !important;
+    gap: 12px 10px !important;
+  }
+
+  .seat-card {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    border: 1px solid #000000 !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+  }
+
+  .seat-card.occupied {
+    background-color: #f1f5f9 !important; /* 옅은 회색 배경으로 인쇄 가독성 높임 */
+    background: #f1f5f9 !important;
+    border: 1.5px solid #000000 !important;
+  }
+
+  .seat-card .seat-index {
+    color: #64748b !important;
+  }
+
+  .seat-student-num {
+    color: #000000 !important;
+    background-color: #e2e8f0 !important;
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  .seat-student-name {
+    color: #000000 !important;
+  }
+
+  .aisle-line {
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 8px,
+      #000000 8px,
+      #000000 16px
+    ) !important;
+  }
+}

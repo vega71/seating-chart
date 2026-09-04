@@ -1,11 +1,10 @@
-
 name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
       - main
-      - master
+      - master # 로컬 브랜치명(master/main)에 모두 대응하도록 설정
 
 permissions:
   contents: read

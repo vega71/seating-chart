@@ -25,6 +25,9 @@
             <div class="header-logo">
                 <i data-lucide="layout-grid" class="logo-icon"></i>
                 <h1>스마트 자리배치 시스템</h1>
+                <button id="btn-github-config" class="btn-github-config" title="GitHub 연동 설정">
+                    <i data-lucide="github"></i>
+                </button>
             </div>
             <p class="header-subtitle">학생들의 자리를 효율적으로 배치하고 관리하세요.</p>
         </header>
@@ -46,6 +49,19 @@
                             <button id="btn-upload-excel" class="btn btn-secondary" title="엑셀 파일 직접 업로드하여 명단 등록">
                                 <i data-lucide="file-spreadsheet"></i> 엑셀 업로드
                             </button>
+                        </div>
+                        <div id="excel-sheet-info" class="sheet-selector-container" style="display: none;">
+                            <div class="sheet-selector-header">
+                                <span class="sheet-badge">
+                                    <i data-lucide="file-spreadsheet"></i> 연동 시트
+                                </span>
+                                <span id="excel-sheet-count" class="sheet-count-badge">0명</span>
+                            </div>
+                            <div class="sheet-select-wrapper">
+                                <select id="excel-sheet-select" class="sheet-select" title="불러올 출석부 시트(기수)를 선택하세요">
+                                    <option value="">시트 선택 중...</option>
+                                </select>
+                            </div>
                         </div>
                         <button id="btn-register" class="btn btn-primary full-width">
                             <i data-lucide="user-check"></i> 명단 등록
@@ -153,6 +169,55 @@
 
     <!-- 토스트 알림 컨테이너 -->
     <div id="toast-container" class="toast-container print-hide"></div>
+
+    <!-- 깃허브 설정 모달 -->
+    <div id="github-modal" class="modal-overlay print-hide" style="display: none;">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h2><i data-lucide="github"></i> GitHub 연동 설정</h2>
+                <button id="btn-close-modal" class="btn-close-modal" title="닫기">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-desc">출석부 파일 자동 동기화 및 자리배치 저장을 위해 GitHub 정보를 입력해 주세요.<br><small style="color: var(--text-muted);">* 공개(Public) 저장소는 토큰 없이 소유자와 저장소 이름만으로도 출석부 연동이 가능합니다.</small></p>
+                <div class="form-group">
+                    <label for="gh-token">GitHub 개인 액세스 토큰 (PAT)</label>
+                    <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxx (비공개 저장소 또는 원격 저장 시 필요)">
+                    <span class="input-help">자리배치 원격 저장 시에는 저장소 쓰기(Contents write) 권한이 필요합니다.</span>
+                </div>
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label for="gh-owner">소유자 (Username) *</label>
+                        <input type="text" id="gh-owner" placeholder="github-username">
+                    </div>
+                    <div class="form-group">
+                        <label for="gh-repo">저장소 이름 (Repository) *</label>
+                        <input type="text" id="gh-repo" placeholder="seating-arrangement">
+                    </div>
+                </div>
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label for="gh-branch">브랜치 (Branch)</label>
+                        <input type="text" id="gh-branch" placeholder="main" value="main">
+                    </div>
+                    <div class="form-group">
+                        <!-- 빈 레이아웃 정렬용 -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="gh-excel-path">엑셀 출석부 파일 경로</label>
+                    <input type="text" id="gh-excel-path" placeholder="public/공동실습소 출석부.xlsx" value="public/공동실습소 출석부.xlsx">
+                </div>
+                <div class="form-group">
+                    <label for="gh-save-path">자리배치 데이터 저장 경로</label>
+                    <input type="text" id="gh-save-path" placeholder="public/seating_data.json" value="public/seating_data.json">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-save-github-config" class="btn btn-primary"><i data-lucide="check"></i> 저장</button>
+                <button id="btn-reset-github-config" class="btn btn-outline" style="color: var(--text-primary); border-color: var(--border-color);"><i data-lucide="trash-2"></i> 초기화</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 스크립트 등록 -->
     <script type="module" src="app.js"></script>

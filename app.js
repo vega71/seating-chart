@@ -34,6 +34,39 @@ const statPlaced = document.getElementById('stat-placed');
 
 const LOCAL_STORAGE_KEY = 'smart_seating_saved_data';
 
+// GitHub 연동 설정 객체
+const GITHUB_CONFIG_KEY = 'smart_seating_github_config';
+let githubConfig = {
+    token: '',
+    owner: '',
+    repo: '',
+    branch: 'main',
+    excelPath: 'public/공동실습소 출석부.xlsx',
+    savePath: 'public/seating_data.json'
+};
+
+// GitHub 관련 DOM 요소 참조
+const btnGithubConfig = document.getElementById('btn-github-config');
+const githubModal = document.getElementById('github-modal');
+const btnCloseModal = document.getElementById('btn-close-modal');
+const btnSaveGithubConfig = document.getElementById('btn-save-github-config');
+const btnResetGithubConfig = document.getElementById('btn-reset-github-config');
+
+const ghTokenInput = document.getElementById('gh-token');
+const ghOwnerInput = document.getElementById('gh-owner');
+const ghRepoInput = document.getElementById('gh-repo');
+const ghBranchInput = document.getElementById('gh-branch');
+const ghExcelPathInput = document.getElementById('gh-excel-path');
+const ghSavePathInput = document.getElementById('gh-save-path');
+
+const excelSheetInfo = document.getElementById('excel-sheet-info');
+const excelSheetSelect = document.getElementById('excel-sheet-select');
+const excelSheetCount = document.getElementById('excel-sheet-count');
+
+// 현재 로드된 엑셀 워크북 캐시 및 선택된 시트 저장 키
+let currentWorkbook = null;
+const SELECTED_SHEET_KEY = 'smart_seating_selected_sheet';
+
 // 예시 학생 명단 (20명)
 const DUMMY_STUDENTS = [
     "김민준", "이서연", "박도윤", "최아윤", "정예준", 
@@ -45,10 +78,13 @@ const DUMMY_STUDENTS = [
 // 초기화 함수
 function init() {
     createGridSlots();
+    loadGithubConfigFromLocalStorage();
     setupEventListeners();
     checkSavedData();
     // 저장된 데이터가 존재하면 자동 복원 시도
-    if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+    if (isGithubWriteConfigured()) {
+        loadFromGithub(true);
+    } else if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
         loadFromLocalStorage(true);
     } else {
         updateUI();
@@ -110,6 +146,16 @@ function setupEventListeners() {
         loadStudentListFromExcel();
     });
 
+    // 엑셀 시트 선택 변경 시 해당 시트 명단 로드
+    if (excelSheetSelect) {
+        excelSheetSelect.addEventListener('change', (e) => {
+            const selectedSheet = e.target.value;
+            if (selectedSheet) {
+                loadSheetByName(selectedSheet, true);
+            }
+        });
+    }
+
     // 엑셀 수동 업로드 버튼 및 인풋 연동
     btnUploadExcel.addEventListener('click', () => {
         excelFileInput.click();
@@ -132,8 +178,8 @@ function setupEventListeners() {
     btnExitPresentation.addEventListener('click', exitPresentationMode);
 
     // 저장 관련 버튼 리스너
-    btnSave.addEventListener('click', saveToLocalStorage);
-    btnLoad.addEventListener('click', () => loadFromLocalStorage(false));
+    btnSave.addEventListener('click', saveSeatingData);
+    btnLoad.addEventListener('click', () => loadSeatingData(false));
     btnExportFile.addEventListener('click', exportToFile);
     btnImportFile.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', importFromFile);
@@ -148,12 +194,36 @@ function setupEventListeners() {
     waitingList.addEventListener('dragleave', handleDragLeave);
     waitingList.addEventListener('drop', handleDropToWaitingList);
 
-    // ESC 키로 크게 보기 탈출
+    // ESC 키로 크게 보기 탈출 및 모달 닫기
     window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && document.body.classList.contains('presentation-mode')) {
-            exitPresentationMode();
+        if (e.key === 'Escape') {
+            if (document.body.classList.contains('presentation-mode')) {
+                exitPresentationMode();
+            }
+            if (githubModal && githubModal.style.display !== 'none') {
+                closeGithubModal();
+            }
         }
     });
+
+    // GitHub 설정 버튼 및 모달 리스너
+    if (btnGithubConfig) {
+        btnGithubConfig.addEventListener('click', openGithubModal);
+    }
+    if (btnCloseModal) {
+        btnCloseModal.addEventListener('click', closeGithubModal);
+    }
+    if (btnSaveGithubConfig) {
+        btnSaveGithubConfig.addEventListener('click', saveGithubConfiguration);
+    }
+    if (btnResetGithubConfig) {
+        btnResetGithubConfig.addEventListener('click', resetGithubConfiguration);
+    }
+    if (githubModal) {
+        githubModal.addEventListener('click', (e) => {
+            if (e.target === githubModal) closeGithubModal();
+        });
+    }
 }
 
 // 학생 명단 등록 로직
@@ -518,8 +588,183 @@ function exitPresentationMode() {
     document.body.classList.remove('presentation-mode');
 }
 
+// GitHub 저장소 읽기 연동 가능 여부 (Owner와 Repo만 있어도 공개 저장소 파일 읽기 가능)
+function isGithubConfigured() {
+    return !!(githubConfig.owner && githubConfig.repo);
+}
+
+// GitHub 자리배치 원격 저장(쓰기) 연동 가능 여부 (토큰 필수)
+function isGithubWriteConfigured() {
+    return !!(githubConfig.token && githubConfig.owner && githubConfig.repo);
+}
+
+// GitHub 설정 모달 열기
+function openGithubModal() {
+    if (!githubModal) return;
+    
+    // 입력 필드에 현재 설정 적용
+    if (ghTokenInput) ghTokenInput.value = githubConfig.token || '';
+    if (ghOwnerInput) ghOwnerInput.value = githubConfig.owner || '';
+    if (ghRepoInput) ghRepoInput.value = githubConfig.repo || '';
+    if (ghBranchInput) ghBranchInput.value = githubConfig.branch || 'main';
+    if (ghExcelPathInput) ghExcelPathInput.value = githubConfig.excelPath || 'public/공동실습소 출석부.xlsx';
+    if (ghSavePathInput) ghSavePathInput.value = githubConfig.savePath || 'public/seating_data.json';
+    
+    githubModal.style.display = 'flex';
+}
+
+// GitHub 설정 모달 닫기
+function closeGithubModal() {
+    if (githubModal) {
+        githubModal.style.display = 'none';
+    }
+}
+
+// LocalStorage에서 GitHub 설정 불러오기
+function loadGithubConfigFromLocalStorage() {
+    const raw = localStorage.getItem(GITHUB_CONFIG_KEY);
+    if (raw) {
+        try {
+            const parsed = JSON.parse(raw);
+            githubConfig = { ...githubConfig, ...parsed };
+        } catch (e) {
+            console.error('GitHub 설정 파싱 실패:', e);
+        }
+    }
+}
+
+// GitHub 설정 저장
+function saveGithubConfiguration() {
+    const token = ghTokenInput ? ghTokenInput.value.trim() : '';
+    const owner = ghOwnerInput ? ghOwnerInput.value.trim() : '';
+    const repo = ghRepoInput ? ghRepoInput.value.trim() : '';
+    const branch = ghBranchInput ? ghBranchInput.value.trim() : 'main';
+    const excelPath = ghExcelPathInput ? ghExcelPathInput.value.trim() : 'public/공동실습소 출석부.xlsx';
+    const savePath = ghSavePathInput ? ghSavePathInput.value.trim() : 'public/seating_data.json';
+    
+    if (!owner || !repo) {
+        alert('소유자(Username)와 저장소 이름(Repository)을 반드시 입력해 주세요.');
+        return;
+    }
+    
+    githubConfig = { token, owner, repo, branch, excelPath, savePath };
+    
+    try {
+        localStorage.setItem(GITHUB_CONFIG_KEY, JSON.stringify(githubConfig));
+        showToast('GitHub 연동 설정이 저장되었습니다.', 'success');
+        closeGithubModal();
+        
+        // 설정이 변경되었으므로 엑셀 및 데이터를 다시 가져온다.
+        loadSeatingData(true);
+    } catch (err) {
+        console.error(err);
+        showToast('설정 저장 중 오류가 발생했습니다.', 'error');
+    }
+}
+
+// GitHub 설정 초기화
+function resetGithubConfiguration() {
+    if (confirm('GitHub 연동 설정을 초기화하고 브라우저 로컬 저장소 모드로 전환하시겠습니까?')) {
+        localStorage.removeItem(GITHUB_CONFIG_KEY);
+        githubConfig = {
+            token: '',
+            owner: '',
+            repo: '',
+            branch: 'main',
+            excelPath: 'public/공동실습소 출석부.xlsx',
+            savePath: 'public/seating_data.json'
+        };
+        
+        if (ghTokenInput) ghTokenInput.value = '';
+        if (ghOwnerInput) ghOwnerInput.value = '';
+        if (ghRepoInput) ghRepoInput.value = '';
+        if (ghBranchInput) ghBranchInput.value = 'main';
+        if (ghExcelPathInput) ghExcelPathInput.value = 'public/공동실습소 출석부.xlsx';
+        if (ghSavePathInput) ghSavePathInput.value = 'public/seating_data.json';
+        
+        // 엑셀 시트 연동 정보 숨김
+        if (excelSheetInfo) excelSheetInfo.style.display = 'none';
+        
+        showToast('GitHub 연동 설정이 초기화되었습니다.', 'info');
+        closeGithubModal();
+        
+        // UI 갱신 및 기존 로컬 데이터 복원 시도
+        checkSavedData();
+        if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+            loadFromLocalStorage(true);
+        } else {
+            updateUI();
+            loadStudentListFromExcel();
+        }
+    }
+}
+
+// GitHub API / Raw URL을 통한 최신 바이너리 파일 다운로드 헬퍼 (캐시 무효화 및 한글 인코딩 지원)
+async function fetchFileFromGithub(path) {
+    const encodedPath = path.split('/').map(segment => encodeURIComponent(segment)).join('/');
+    const timestamp = Date.now();
+    
+    // 1차 시도: Raw Content 다운로드 (파일 크기 제한 없음, 캐시 버스팅)
+    try {
+        const rawUrl = `https://raw.githubusercontent.com/${githubConfig.owner}/${githubConfig.repo}/${githubConfig.branch}/${encodedPath}?_t=${timestamp}`;
+        const rawHeaders = { 'Cache-Control': 'no-cache, no-store, must-revalidate' };
+        if (githubConfig.token) {
+            rawHeaders['Authorization'] = `Bearer ${githubConfig.token}`;
+        }
+        
+        const rawResponse = await fetch(rawUrl, {
+            headers: rawHeaders,
+            cache: 'no-store'
+        });
+        
+        if (rawResponse.ok) {
+            return await rawResponse.arrayBuffer();
+        }
+    } catch (rawErr) {
+        console.warn('GitHub Raw 다운로드 실패, Contents API로 재시도합니다:', rawErr);
+    }
+
+    // 2차 시도: GitHub Contents REST API
+    const apiUrl = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${encodedPath}?ref=${githubConfig.branch}&_t=${timestamp}`;
+    const apiHeaders = {
+        'Accept': 'application/vnd.github+json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate'
+    };
+    if (githubConfig.token) {
+        apiHeaders['Authorization'] = `Bearer ${githubConfig.token}`;
+    }
+    
+    const response = await fetch(apiUrl, {
+        headers: apiHeaders,
+        cache: 'no-store'
+    });
+    
+    if (!response.ok) {
+        throw new Error(`GitHub에서 파일을 가져올 수 없습니다. Status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    if (!data.content) {
+        if (data.download_url) {
+            const dlRes = await fetch(`${data.download_url}&_t=${timestamp}`, { cache: 'no-store' });
+            if (dlRes.ok) return await dlRes.arrayBuffer();
+        }
+        throw new Error('GitHub 파일 내용이 비어있습니다.');
+    }
+
+    const contentBase64 = data.content.replace(/\s/g, '');
+    
+    // base64 to binary array
+    const binaryString = atob(contentBase64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+}
+
 // -------------------------------------------------------------
-// 저장 & 불러오기 기능 (LocalStorage 및 JSON 파일)
+// 저장 & 불러오기 기능 (LocalStorage 및 GitHub 연동)
 // -------------------------------------------------------------
 
 // 브라우저 LocalStorage에 현재 상태 저장
@@ -584,6 +829,192 @@ function loadFromLocalStorage(isAutoLoad = false) {
     } catch (err) {
         console.error(err);
         if (!isAutoLoad) showToast('저장 데이터를 불러오는데 실패했습니다.', 'error');
+    }
+}
+
+// 자리배치 데이터를 깃허브 또는 LocalStorage에 저장
+function saveSeatingData() {
+    if (isGithubWriteConfigured()) {
+        saveToGithub();
+    } else {
+        if (isGithubConfigured() && !githubConfig.token) {
+            showToast('GitHub 저장을 위해서는 개인 액세스 토큰(PAT)이 필요하여 브라우저 로컬 저장소에 저장합니다.', 'info');
+        }
+        saveToLocalStorage();
+    }
+}
+
+// 자리배치 데이터를 깃허브 또는 LocalStorage에서 로드
+function loadSeatingData(isAutoLoad = false) {
+    if (isGithubWriteConfigured()) {
+        loadFromGithub(isAutoLoad);
+    } else {
+        loadFromLocalStorage(isAutoLoad);
+    }
+}
+
+// 깃허브에 현재 상태 저장
+async function saveToGithub() {
+    if (state.students.length === 0) {
+        showToast('저장할 자리배치 명단이 없습니다.', 'warning');
+        return;
+    }
+
+    showToast('GitHub에 자리배치 데이터를 저장하는 중...', 'info');
+
+    const now = new Date();
+    const timeStr = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const saveData = {
+        students: state.students,
+        seats: state.seats,
+        savedAt: timeStr
+    };
+    
+    const jsonStr = JSON.stringify(saveData, null, 2);
+    
+    // 유니코드 한글이 깨지지 않도록 Base64 변환 처리
+    const encoder = new TextEncoder();
+    const dataBytes = encoder.encode(jsonStr);
+    let base64Content = '';
+    const len = dataBytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        base64Content += String.fromCharCode(dataBytes[i]);
+    }
+    base64Content = btoa(base64Content);
+
+    const headers = {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': `Bearer ${githubConfig.token}`,
+        'Content-Type': 'application/json'
+    };
+
+    try {
+        // 1. 기존 파일의 SHA 해시 값을 조회하기 위해 GET 요청 시도
+        let sha = null;
+        const getUrl = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.savePath}?ref=${githubConfig.branch}`;
+        try {
+            const getRes = await fetch(getUrl, { headers });
+            if (getRes.ok) {
+                const getJson = await getRes.json();
+                sha = getJson.sha;
+            }
+        } catch (e) {
+            console.log('기존 파일 없음 또는 조회 실패. 신규 생성 진행:', e);
+        }
+
+        // 2. PUT 요청을 통해 파일 업로드/업데이트
+        const putUrl = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.savePath}`;
+        const body = {
+            message: `자리배치 저장 - ${timeStr} [자동 커밋]`,
+            content: base64Content,
+            branch: githubConfig.branch
+        };
+        if (sha) {
+            body.sha = sha;
+        }
+
+        const putRes = await fetch(putUrl, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(body)
+        });
+
+        if (!putRes.ok) {
+            throw new Error(`GitHub API HTTP 에러: ${putRes.status}`);
+        }
+
+        // 로컬스토리지에도 동기화용 백업 저장
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(saveData));
+
+        showToast('GitHub에 성공적으로 저장되었습니다!', 'success');
+        
+        // 최근 저장 기록 텍스트 업데이트
+        saveTimeText.innerText = `최근 저장(GitHub): ${timeStr}`;
+        btnLoad.disabled = false;
+        
+    } catch (err) {
+        console.error(err);
+        showToast(`GitHub 저장 실패: ${err.message}`, 'error');
+    }
+}
+
+// 깃허브에서 상태 불러오기
+async function loadFromGithub(isAutoLoad = false) {
+    if (!isGithubConfigured()) return;
+    
+    if (!isAutoLoad) {
+        showToast('GitHub에서 자리배치 데이터를 불러오는 중...', 'info');
+    }
+
+    const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/${githubConfig.savePath}?ref=${githubConfig.branch}`;
+    const headers = {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': `Bearer ${githubConfig.token}`
+    };
+
+    try {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('저장된 자리배치 파일이 존재하지 않습니다.');
+            }
+            throw new Error(`불러오기 실패 (Status: ${response.status})`);
+        }
+
+        const fileData = await response.json();
+        const contentBase64 = fileData.content.replace(/\s/g, '');
+        
+        // base64 to utf-8 text
+        const binaryString = atob(contentBase64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        const decoder = new TextDecoder();
+        const jsonStr = decoder.decode(bytes);
+        
+        const parsed = JSON.parse(jsonStr);
+        if (!parsed || !Array.isArray(parsed.students) || !Array.isArray(parsed.seats)) {
+            throw new Error('유효하지 않은 데이터 구조입니다.');
+        }
+
+        state.students = parsed.students;
+        state.students.forEach((s, idx) => {
+            if (s.no === undefined) {
+                s.no = idx + 1;
+            }
+        });
+        state.seats = parsed.seats;
+
+        // 입력 창 동기화
+        studentInput.value = state.students.map(s => s.name).join('\n');
+
+        updateUI();
+        lucide.createIcons();
+
+        // 상태 저장 텍스트 동기화
+        if (parsed.savedAt) {
+            saveTimeText.innerText = `최근 저장(GitHub): ${parsed.savedAt}`;
+        } else {
+            saveTimeText.innerText = '저장된 데이터 있음';
+        }
+        btnLoad.disabled = false;
+
+        if (!isAutoLoad) {
+            showToast(`GitHub에서 자리배치를 불러왔습니다. (${parsed.savedAt || ''})`, 'info');
+        }
+    } catch (err) {
+        console.error(err);
+        if (!isAutoLoad) {
+            showToast(`GitHub 데이터 복원 실패: ${err.message}`, 'error');
+        }
+        
+        // 깃허브 로드 실패 시 로컬 스토리지 데이터로 폴백 시도
+        if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+            loadFromLocalStorage(isAutoLoad);
+        }
     }
 }
 
@@ -671,120 +1102,189 @@ function checkSavedData() {
     }
 }
 
-// 엑셀 파일로부터 학생 명단 자동 로드
-async function loadStudentListFromExcel() {
-    try {
-        showToast('출석부 파일에서 명단을 불러오는 중...', 'info');
-        
-        const response = await fetch('/공동실습소 출석부.xlsx');
-        if (!response.ok) {
-            throw new Error('출석부 파일을 찾을 수 없거나 불러올 수 없습니다.');
+// -------------------------------------------------------------
+// 엑셀 시트 파싱 및 학생 명단 추출 헬퍼 함수
+// -------------------------------------------------------------
+
+// 워크시트에서 학생 명단 추출 (번호와 이름 유연하게 파싱)
+function extractStudentsFromSheet(worksheet) {
+    if (!worksheet) return [];
+    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    const extractedNames = [];
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length < 2) continue;
+
+        const numVal = row[0];
+        const nameVal = row[1];
+
+        // 번호 유효성 검사 (숫자 또는 숫자로 파싱 가능한 정수 1~999)
+        const num = Number(numVal);
+        const isNumValid = !isNaN(num) && Number.isInteger(num) && num > 0;
+
+        // 이름 유효성 검사
+        const nameStr = nameVal !== undefined && nameVal !== null ? String(nameVal).trim() : '';
+        const isNameValid = nameStr.length > 0 && nameStr !== '이름' && nameStr !== '성명';
+
+        if (isNumValid && isNameValid) {
+            extractedNames.push(nameStr);
         }
-        
-        const arrayBuffer = await response.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        
-        const sheetNames = workbook.SheetNames;
-        if (!sheetNames || sheetNames.length === 0) {
-            throw new Error('엑셀 파일에 시트가 존재하지 않습니다.');
+    }
+    return extractedNames;
+}
+
+// 엑셀 워크북을 분석하여 시트 선택 드롭다운을 구성하고 명단 반영
+function applyWorkbook(workbook, preferredSheet = null) {
+    currentWorkbook = workbook;
+    const sheetNames = workbook.SheetNames;
+    if (!sheetNames || sheetNames.length === 0) {
+        throw new Error('엑셀 파일에 시트가 존재하지 않습니다.');
+    }
+
+    // 각 시트별 학생 수 미리 확인
+    const sheetInfos = [];
+    sheetNames.forEach(sheetName => {
+        const ws = workbook.Sheets[sheetName];
+        const names = extractStudentsFromSheet(ws);
+        sheetInfos.push({ name: sheetName, count: names.length });
+    });
+
+    // 시트 선택 드롭다운 옵션 생성
+    if (excelSheetSelect) {
+        excelSheetSelect.innerHTML = '';
+        sheetInfos.forEach(info => {
+            const opt = document.createElement('option');
+            opt.value = info.name;
+            opt.innerText = info.count > 0 ? `${info.name} (${info.count}명)` : `${info.name} (명단 없음)`;
+            excelSheetSelect.appendChild(opt);
+        });
+    }
+
+    // 대상 시트 결정 우선순위:
+    // 1. 매개변수로 전달된 시트
+    // 2. 이전에 선택했던 LocalStorage 저장 시트
+    // 3. 학생이 있는 가장 마지막 기수 시트
+    // 4. 마지막 시트
+    const savedSheet = localStorage.getItem(SELECTED_SHEET_KEY);
+    let targetSheetName = null;
+
+    if (preferredSheet && sheetNames.includes(preferredSheet)) {
+        targetSheetName = preferredSheet;
+    } else if (savedSheet && sheetNames.includes(savedSheet)) {
+        targetSheetName = savedSheet;
+    } else {
+        const validSheets = sheetInfos.filter(s => s.count > 0);
+        if (validSheets.length > 0) {
+            targetSheetName = validSheets[validSheets.length - 1].name;
+        } else {
+            targetSheetName = sheetNames[sheetNames.length - 1];
         }
-        
-        // 맨 마지막 시트 선택
-        const lastSheetName = sheetNames[sheetNames.length - 1];
-        const worksheet = workbook.Sheets[lastSheetName];
-        
-        // 2차원 배열로 변환
-        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        
-        // 학생 이름 추출
-        const extractedNames = [];
-        for (let i = 0; i < rows.length; i++) {
-            const row = rows[i];
-            if (!row || row.length < 2) continue;
-            
-            const numberVal = row[0];
-            const nameVal = row[1];
-            
-            // 첫 번째 셀이 숫자(번호)이고 두 번째 셀이 유효한 문자열(이름)인 행
-            const isNumber = typeof numberVal === 'number' && Number.isInteger(numberVal) && numberVal > 0;
-            const isNameValid = typeof nameVal === 'string' && nameVal.trim().length > 0;
-            
-            if (isNumber && isNameValid) {
-                extractedNames.push(nameVal.trim());
-            }
-        }
-        
-        if (extractedNames.length === 0) {
-            throw new Error(`마지막 시트('${lastSheetName}')에서 학생 명단을 찾을 수 없습니다.`);
-        }
-        
-        // 학생 명단 입력창에 채우고 자동 등록
-        studentInput.value = extractedNames.join('\n');
-        registerStudents();
-        
-        showToast(`'${lastSheetName}' 시트에서 학생 ${extractedNames.length}명의 명단을 불러왔습니다.`, 'success');
-    } catch (error) {
-        console.error('Excel load error:', error);
-        showToast(`출석부 자동 로드 실패: ${error.message}. 예시 명단을 로드합니다.`, 'error');
-        // 실패 시 예시 명단 채우기
-        studentInput.value = DUMMY_STUDENTS.join('\n');
-        registerStudents();
+    }
+
+    if (excelSheetSelect) {
+        excelSheetSelect.value = targetSheetName;
+    }
+
+    loadSheetByName(targetSheetName);
+}
+
+// 특정 시트 이름을 기반으로 학생 명단 로드
+function loadSheetByName(sheetName, isUserSelect = false) {
+    if (!currentWorkbook) return;
+    const worksheet = currentWorkbook.Sheets[sheetName];
+    if (!worksheet) {
+        showToast(`'${sheetName}' 시트를 찾을 수 없습니다.`, 'error');
+        return;
+    }
+
+    const extractedNames = extractStudentsFromSheet(worksheet);
+
+    if (extractedNames.length === 0) {
+        showToast(`'${sheetName}' 시트에서 유효한 학생 명단을 찾을 수 없습니다.`, 'warning');
+        if (excelSheetCount) excelSheetCount.innerText = '0명';
+        return;
+    }
+
+    // 학생 명단 입력창에 채우고 자동 등록
+    studentInput.value = extractedNames.join('\n');
+    registerStudents();
+
+    // UI 배지 갱신
+    if (excelSheetInfo) {
+        excelSheetInfo.style.display = 'flex';
+    }
+    if (excelSheetCount) {
+        excelSheetCount.innerText = `${extractedNames.length}명`;
+    }
+
+    // 선택된 시트 기억
+    localStorage.setItem(SELECTED_SHEET_KEY, sheetName);
+
+    if (isUserSelect) {
+        showToast(`'${sheetName}' 시트(${extractedNames.length}명)로 명단이 변경되었습니다.`, 'info');
+    } else {
+        showToast(`'${sheetName}' 시트에서 최신 학생 ${extractedNames.length}명의 명단을 불러왔습니다.`, 'success');
     }
 }
 
-// 업로드한 엑셀 파일로부터 학생 명단 파싱 및 등록
+// 엑셀 파일로부터 학생 명단 자동 로드 (캐시 무효화 및 GitHub/로컬 지원)
+async function loadStudentListFromExcel() {
+    try {
+        let arrayBuffer;
+        const timestamp = Date.now();
+        
+        if (isGithubConfigured()) {
+            showToast('GitHub 저장소에서 최신 출석부 파일을 가져오는 중...', 'info');
+            arrayBuffer = await fetchFileFromGithub(githubConfig.excelPath);
+        } else {
+            showToast('로컬 출석부 파일에서 최신 명단을 불러오는 중...', 'info');
+            // 상대경로 및 캐시 버스팅 파라미터 적용
+            const localUrl = `./공동실습소 출석부.xlsx?_t=${timestamp}`;
+            const response = await fetch(localUrl, {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+            });
+            if (!response.ok) {
+                throw new Error(`출석부 파일을 찾을 수 없거나 불러올 수 없습니다. (HTTP ${response.status})`);
+            }
+            arrayBuffer = await response.arrayBuffer();
+        }
+        
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        applyWorkbook(workbook);
+        
+    } catch (error) {
+        console.error('Excel load error:', error);
+        showToast(`출석부 연동 실패: ${error.message}`, 'error');
+        
+        // 에러 시 연동 시트 정보 숨김
+        if (excelSheetInfo) excelSheetInfo.style.display = 'none';
+        
+        // 명단이 완전히 비어있을 때만 예시 명단 채우기
+        if (state.students.length === 0 && !studentInput.value.trim()) {
+            studentInput.value = DUMMY_STUDENTS.join('\n');
+            registerStudents();
+        }
+    }
+}
+
+// 사용자가 직접 업로드한 엑셀 파일로부터 학생 명단 파싱 및 등록
 async function handleExcelUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
 
     try {
-        showToast('엑셀 파일을 파싱하는 중...', 'info');
+        showToast('엑셀 파일을 분석하는 중...', 'info');
 
         const arrayBuffer = await file.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        applyWorkbook(workbook);
 
-        const sheetNames = workbook.SheetNames;
-        if (!sheetNames || sheetNames.length === 0) {
-            throw new Error('엑셀 파일에 시트가 존재하지 않습니다.');
-        }
-
-        // 맨 마지막 시트 선택
-        const lastSheetName = sheetNames[sheetNames.length - 1];
-        const worksheet = workbook.Sheets[lastSheetName];
-
-        // 2차원 배열로 변환
-        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-        // 학생 이름 추출
-        const extractedNames = [];
-        for (let i = 0; i < rows.length; i++) {
-            const row = rows[i];
-            if (!row || row.length < 2) continue;
-
-            const numberVal = row[0];
-            const nameVal = row[1];
-
-            // 첫 번째 셀이 숫자(번호)이고 두 번째 셀이 유효한 문자열(이름)인 행
-            const isNumber = typeof numberVal === 'number' && Number.isInteger(numberVal) && numberVal > 0;
-            const isNameValid = typeof nameVal === 'string' && nameVal.trim().length > 0;
-
-            if (isNumber && isNameValid) {
-                extractedNames.push(nameVal.trim());
-            }
-        }
-
-        if (extractedNames.length === 0) {
-            throw new Error(`마지막 시트('${lastSheetName}')에서 학생 명단을 찾을 수 없습니다.`);
-        }
-
-        // 학생 명단 입력창에 채우고 자동 등록
-        studentInput.value = extractedNames.join('\n');
-        registerStudents();
-
-        showToast(`'${lastSheetName}' 시트에서 학생 ${extractedNames.length}명의 명단을 불러왔습니다.`, 'success');
     } catch (error) {
         console.error('Excel upload error:', error);
-        showToast(`엑셀 파싱 실패: ${error.message}`, 'error');
+        showToast(`엑셀 파일 파싱 실패: ${error.message}`, 'error');
+        if (excelSheetInfo) excelSheetInfo.style.display = 'none';
     } finally {
         event.target.value = ''; // 파일 선택 입력 초기화
     }
